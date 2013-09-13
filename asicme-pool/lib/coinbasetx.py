@@ -55,7 +55,7 @@ class CoinbaseTransaction(halfnode.CTransaction):
         self._serialized = super(CoinbaseTransaction, self).serialize().split(self.extranonce_placeholder)
 
     def set_extranonce(self, extranonce):
-        print repr(extranonce), self.extranonce_size
+        # print repr(extranonce), self.extranonce_size
         if len(extranonce) != self.extranonce_size:
             raise Exception("Incorrect extranonce size")
         

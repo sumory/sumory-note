@@ -210,7 +210,7 @@ class TemplateRegistry(object):
                  
         target_user = self.diff_to_target(difficulty)        
 
-        logger.log('share', worker_name, 'HASH %064x' % hash_int, 'TARGET %064x' % job.target)
+        logger.log('share', worker_name, 'HASH %064x' % hash_int, 'TARGET %064x' % job.target, 'DIFF %d' % difficulty)
 
         if hash_int > target_user:
             logger.log('bad_client', 'Share is above target')

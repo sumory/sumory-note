@@ -107,7 +107,7 @@ class BlockTemplate(halfnode.CBlock):
     
     def check_ntime(self, ntime):
         '''Check for ntime restrictions.'''
-        print ntime, self.curtime, time.time()
+        # print ntime, self.curtime, time.time()
         if ntime < self.curtime:
             return False
         

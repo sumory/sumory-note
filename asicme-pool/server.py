@@ -129,9 +129,12 @@ def connection_handler(sock, address):
             elif request['method'] == 'mining.submit':
                 # oh yeah
                 # {"params": ["slush.miner1", "bf", "00000001", "504e86ed", "b2957c02"], "id": 4, "method": "mining.submit"}
-
+                
                 worker_name, job_id, extranonce2, ntime, nonce = request['params']
                 
+                # for calculate hashrate of the workers
+                logger.log('hashrate', '%s %s' % (worker_name, client.difficulty))                
+
                 extranonce1_bin = client.extranonce1
                 if not extranonce1_bin:
                     break
@@ -143,7 +146,7 @@ def connection_handler(sock, address):
                     submit_result = registry.submit_share(job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce, client.difficulty)
                     result = True
                 except exceptions.SubmitException, e:
-                    print e
+                    logger.log('submit_exception','worker %s except %s' % (worker_name, e))
                     result = True
                     break
                 except:
@@ -153,9 +156,11 @@ def connection_handler(sock, address):
 
 
     except BaseException, e:
+        logger.log('fail_client','worker %s:%s except %s' % (client.address[0],client.address[1],e))
         raise
     finally:
         all_clients.remove(client)
+        logger.log('fail_client','worker %s:%s removed' % (client.address[0],client.address[1]))
 
 
 if __name__ == '__main__':
