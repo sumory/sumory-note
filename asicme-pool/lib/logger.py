@@ -10,7 +10,7 @@ scope_to_f = {}
 def log(scope, *args):
     if(settings.LOG_ROLL):
         if(scope != 'block' and scope != 'submitblock' and scope != 'error'):
-            suffix = time.strftime('%Y%m%d_%H%M',time.localtime(time.time()))
+            suffix = time.strftime('%Y%m%d',time.localtime(time.time()))
             scope = scope + '.' + suffix
 
     if scope not in scope_to_f:

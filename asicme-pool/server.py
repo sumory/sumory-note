@@ -148,7 +148,8 @@ def connection_handler(sock, address):
                 except exceptions.SubmitException, e:
                     logger.log('submit_exception','worker %s except %s' % (worker_name, e))
                     result = True
-                    break
+                    # break
+                    pass
                 except:
                     pass
 
