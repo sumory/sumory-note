@@ -39,6 +39,7 @@ all_clients = set()
 rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_PORT, settings.BITCOIN_RPC_USER, settings.BITCOIN_RPC_PASS)
 
 def broadcast(broadcast_args):
+    print '%s broadcasting' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) 
     for client in all_clients:
         try:
             client.call('mining.notify', *broadcast_args)
