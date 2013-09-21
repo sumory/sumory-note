@@ -1,0 +1,4 @@
+backlogs/
+logs/
+*.pyc
+lib/*.pyc
