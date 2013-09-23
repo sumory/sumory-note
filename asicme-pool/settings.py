@@ -12,6 +12,7 @@ BITCOIN_ADDRESSES = {
      #'mvVUsS9JQ72AsHNegUVgA1mQFqQPuLfGDR':100
 }
 
+#default difficulty, if no diff set for the worker
 DIFFICULTY = 10
 
 COINBASE_EXTRAS = '/stratum/'
@@ -19,5 +20,13 @@ INSTANCE_ID = 10
 PREVHASH_REFRESH_INTERVAL = 5
 MERKLE_REFRESH_INTERVAL = 50
 
-
+#roll log file or not
 LOG_ROLL = True
+
+
+#mysql settings
+DB_HOST='localhost'
+DB_USER='root'
+DB_PWD='123456'
+DB_DB='asicme_test'
+DB_PORT=3306

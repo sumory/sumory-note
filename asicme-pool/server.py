@@ -20,6 +20,14 @@ import binascii
 import struct
 import random
 import geventhttpclient
+from database import *
+
+try:
+    db=get_pooled_mysql_db()
+    print 'finished db initialization, got db connection'
+except Exception, e:
+    print 'failed db initialization: %s' % e
+    exit()
 
 
 all_clients = set()
@@ -74,7 +82,7 @@ class Client(object):
         line = self.fileobj.readline()
         if not line:
             return
-        logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
+        #logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
         request = json.loads(line)
         return request
 
@@ -85,7 +93,7 @@ class Client(object):
             'params': args,
         }
         s = json.dumps(obj) + '\n'
-        logger.log('client', 'call %s:%s %s' % (self.address[0], self.address[1], s.strip()))
+        #logger.log('client', 'call %s:%s %s' % (self.address[0], self.address[1], s.strip()))
         self.fileobj.write(s)
         self.fileobj.flush()
 
@@ -96,7 +104,7 @@ class Client(object):
             'error': None,
         }
         s = json.dumps(obj) + '\n'
-        logger.log('client', 'resp %s:%s %s' % (self.address[0], self.address[1], s.strip()))
+        #logger.log('client', 'resp %s:%s %s' % (self.address[0], self.address[1], s.strip()))
         self.fileobj.write(s)
         self.fileobj.flush()
 
@@ -124,8 +132,32 @@ def connection_handler(sock, address):
                 client.call('mining.notify', job_id, prevhash, coinb1, coinb2, merkle_branch, version, nbits, ntime, True)
 
             elif request['method'] == 'mining.authorize':
-                client.username = request['params'][0]
-                client.response(request['id'], True)
+                worker_name = request['params'][0]
+
+                print('auth worker: %s' % worker_name)
+                try:
+                    sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
+                    logger.log('authorize', 'sql: %s' % (sql))
+                    worker=db.one_dict(sql)
+                    logger.log('authorize', 'query result: %s' % worker)
+                except Exception, e:
+                    logger.log('authorize', 'query exception: %s ' % e)
+                    break
+
+                if(worker==None):
+                    logger.log('authorize', 'no worker: %s %s' % (address, worker_name))
+                    break
+                else:
+                    client.username = worker_name
+                    if('difficulty' in worker):
+                        diff = worker['difficulty']
+                        logger.log('authorize', 'set custome-diff: %s' % diff)
+                    else:
+                        diff = settings.DIFFICULTY
+                        logger.log('authorize', 'set default-diff: %s' % diff)
+                    client.difficulty = diff
+                    client.call('mining.set_difficulty', client.difficulty)
+                    client.response(request['id'], True)
 
             elif request['method'] == 'mining.submit':
                 # oh yeah
