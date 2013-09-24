@@ -7,6 +7,7 @@ BITCOIN_RPC_PASS = 'BQyoWPo4EzmfNK7z4NrNejZSLqEwwiRd47tD78jSj6Rj'
 
 BITCOIN_ADDRESSES = {
      '1AYTkpQDA2nu6vu6JjZvbDgMXa1SjehVYu': 100
+     #'1MmYQSEtF3nmhGZcFLDhrNr7fWn5fehD9Z': 100,
      #'mn6QvZuSLp8gqQrgXvweS4doiBv5EMM3jT': 100,
      #'mqFwFYJ6btZRTinw3fTt6no1wXpKT3fURw':100,
      #'mvVUsS9JQ72AsHNegUVgA1mQFqQPuLfGDR':100
@@ -23,6 +24,8 @@ MERKLE_REFRESH_INTERVAL = 50
 #roll log file or not
 LOG_ROLL = True
 
+#auth user or not
+AUTH_USER = True
 
 #mysql settings
 DB_HOST='localhost'

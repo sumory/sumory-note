@@ -22,12 +22,14 @@ import random
 import geventhttpclient
 from database import *
 
-try:
-    db=get_pooled_mysql_db()
-    print 'finished db initialization, got db connection'
-except Exception, e:
-    print 'failed db initialization: %s' % e
-    exit()
+
+if(settings.AUTH_USER):
+    try:
+        db=get_pooled_mysql_db()
+        print 'finished db initialization, got db connection'
+    except Exception, e:
+        print 'failed db initialization: %s' % e
+        exit()
 
 
 all_clients = set()
@@ -133,30 +135,35 @@ def connection_handler(sock, address):
 
             elif request['method'] == 'mining.authorize':
                 worker_name = request['params'][0]
+                
+                if(settings.AUTH_USER):
+                    print('auth worker: %s' % worker_name)
+                    try:
+                        sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
+                        logger.log('authorize', 'sql: %s' % (sql))
+                        worker=db.one_dict(sql)
+                        logger.log('authorize', 'query result: %s' % worker)
+                    except Exception, e:
+                        logger.log('authorize', 'query exception: %s ' % e)
+                        break
 
-                print('auth worker: %s' % worker_name)
-                try:
-                    sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
-                    logger.log('authorize', 'sql: %s' % (sql))
-                    worker=db.one_dict(sql)
-                    logger.log('authorize', 'query result: %s' % worker)
-                except Exception, e:
-                    logger.log('authorize', 'query exception: %s ' % e)
-                    break
-
-                if(worker==None):
-                    logger.log('authorize', 'no worker: %s %s' % (address, worker_name))
-                    break
+                    if(worker==None):
+                        logger.log('authorize', 'no worker: %s %s' % (address, worker_name))
+                        break
+                    else:
+                        client.username = worker_name
+                        if('difficulty' in worker):
+                            diff = worker['difficulty']
+                            logger.log('authorize', 'set custome-diff: %s' % diff)
+                        else:
+                            diff = settings.DIFFICULTY
+                            logger.log('authorize', 'set default-diff: %s' % diff)
+                        client.difficulty = diff
+                        client.call('mining.set_difficulty', client.difficulty)
+                        client.response(request['id'], True)
                 else:
                     client.username = worker_name
-                    if('difficulty' in worker):
-                        diff = worker['difficulty']
-                        logger.log('authorize', 'set custome-diff: %s' % diff)
-                    else:
-                        diff = settings.DIFFICULTY
-                        logger.log('authorize', 'set default-diff: %s' % diff)
-                    client.difficulty = diff
-                    client.call('mining.set_difficulty', client.difficulty)
+                    client.difficulty = settings.DIFFICULTY
                     client.response(request['id'], True)
 
             elif request['method'] == 'mining.submit':
