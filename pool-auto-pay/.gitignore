@@ -1,0 +1,4 @@
+logs/
+*.pyc
+lib/*.pyc
+database/*.pyc
