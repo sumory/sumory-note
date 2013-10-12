@@ -31,17 +31,30 @@ class BitcoinRPC(object):
                 'id': '1',
         }))
 
+    def _pay_call_raw(self, data):
+        logger.log('pay', 'req:', data)
+        res = self.client.post('/', body=data, headers=self.headers).read()
+        logger.log('pay', 'res:', res)
+        return res
+
+    def _pay_call(self, method, params):
+        return self._pay_call_raw(json.dumps({
+            'jsonrpc': '2.0',
+            'method': method,
+            'params': params,
+            'id': '1',
+        }))
+
                                            
     def validateaddress(self, address):
-        resp = self._call('validateaddress', [address])
-        return json.loads(resp)['result']
+        resp = self._pay_call('validateaddress', [address])
+        return json.loads(resp)['result']['isvalid']
 
 
     def settxfee(self, amount):
         resp = self._call('settxfee', [amount])
         return resp
 
-    #timeout - seconds
     def walletpassphrase(self, passphrase, timeout):
         resp = self._call('walletpassphrase', [passphrase, timeout])
         return resp
@@ -51,7 +64,7 @@ class BitcoinRPC(object):
         return json.loads(resp)
 
     def getbalance(self, account):
-        resp = self._call('getbalance', [account])
+        resp = self._pay_call('getbalance', [account])
         result = json.loads(resp)
         if(result['error']):
             logger.log('error','getbalance error %s' % result)
@@ -60,7 +73,7 @@ class BitcoinRPC(object):
             return result['result']
 
     def sendfrom(self, account, to_address, amount):
-        resp = self._call('sendfrom', [account, to_address, amount])
+        resp = self._pay_call('sendfrom', [account, to_address, amount])
         result = json.loads(resp)
         if(result['error']):
             logger.log('error','sendfrom error %s' % result)

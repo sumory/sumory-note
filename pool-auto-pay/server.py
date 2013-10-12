@@ -44,32 +44,56 @@ rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_POR
 wallet_account = settings.WALLET_ACCOUNT
 
 def pay():
+    print '%s paying..' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     logger.log('debug', 'pay start')
 
     try:
-        sql='select id, user_id, user_name, amount, send_amount, bitcoin_address, status, time from pool_withdraw where status = 0'
+        sql = 'select id, user_id, user_name, amount, send_amount, bitcoin_address, status, time from pool_withdraw where status = 0'
         all_withdraw = db.all_dict(sql)
-        #print(sql)
-        #print(all_withdraw)
-        print('need pay for %d withdraw' % len(all_withdraw))
-        if(len(all_withdraw)!=0):
-            rpc.walletpassphrase('123456', 60)
+        logger.log('debug', 'need pay for %d withdraw' % len(all_withdraw))
+
+        if(len(all_withdraw) != 0):
+            try:
+                rpc.walletpassphrase('123456', 15)
+            except Exception,e:
+                logger.log('error','walletpassphrase error %s' % e)
+
             for w in all_withdraw:
-                #print(w)
-                print('+++++++++++++++++++++++++++++++++start one++++++++++++++++++++++++++++++++++++++++++++++++')
-                send_amount =  float(w['send_amount'])
-                address = 'n4T6tGhoiS2KmykjWpjeHZJNqi65cTudpb' #w['bitcoin_address']
-                balance = float(rpc.getbalance(wallet_account))
-                if(balance > send_amount):
-                    logger.log('pay','start %d %s %.8f %s' % (w['id'], w['user_name'], send_amount, address))
-                    txid = rpc.sendfrom(wallet_account, address, 100000 if send_amount<9 else send_amount)
-                    if txid is not None:
-                        logger.log('pay','txid %s' % txid)
+                try:
+                    logger.log('pay', '+++++++++++++++++++++++++++++++++start one++++++++++++++++++++++++++++++++++++++++++++++++')
+                    
+                    withdraw_id = w['id']
+                    username = w['user_name']
+                    send_amount =  float(w['send_amount'])
+                    address = 'mkaUYgNmoRJD9Y23DyXDCaN2aWaAaqey6j' #w['bitcoin_address']
+                    balance = float(rpc.getbalance(wallet_account))
+                    address_valid = rpc.validateaddress(address)
+
+                    logger.log('pay','start %d %s %.8f %s' % (withdraw_id, username, send_amount, address))
+                    
+                    if(address_valid != True):
+                        logger.log('pay', 'invalid address %s' % address)
+                    elif(balance > send_amount):
+                        
+                        now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+                        txid = rpc.sendfrom(wallet_account, address, send_amount)
+                        sql = 'update pool_withdraw set status = 1,confirm_time="%s" where id = %d' % (now, withdraw_id)
+                        db.run(sql)
+                        if txid is not None:                            
+                            logger.log('pay','txid %s' % txid)
+                            sql = 'update pool_withdraw set status=1, bitcoin_transaction="%s", payment_user="%s", confirm_time="%s" where id = %d' % (txid, 'auto_pay', now, withdraw_id)
+                            db.run(sql)
+                            logger.log('pay', 'pay success')
+                        else:
+                            logger.log('pay','txid is None')
                     else:
-                        logger.log('pay','txid is None')
-                else:
-                    logger.log('pay','not enough money to pay %s %.8f' % (w['user_name'],send_amount))
-                print('+++++++++++++++++++++++++++++++++end one++++++++++++++++++++++++++++++++++++++++++++++++++')
+                        logger.log('pay','not enough money to pay %s %.8f' % (username, send_amount))
+                    logger.log('pay', '+++++++++++++++++++++++++++++++++end one++++++++++++++++++++++++++++++++++++++++++++++++++')
+                except Exception, e:
+                    logger.log('pay', 'exception %s' % e)
+                    logger.log('error', 'Exception %s' %e)
+                    logger.log('pay', '+++++++++++++++++++++++++++++++++end one++++++++++++++++++++++++++++++++++++++++++++++++++')
+                    
 
         
     except exceptions.AutoPayException, e:
@@ -83,5 +107,10 @@ def pay():
 
 
 if __name__ == '__main__':
-    print('启动auto-pay')
-    pay()
+    forever = False
+    if(forever is True):
+        while True:
+            pay()
+            time.sleep(20)
+    else:
+        pay()
