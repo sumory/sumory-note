@@ -1,3 +1,0 @@
-
-class AutoPayException(BaseException):
-    pass
