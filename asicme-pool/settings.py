@@ -6,26 +6,25 @@ BITCOIN_RPC_USER = 'bitcoinrpc'
 BITCOIN_RPC_PASS = 'BQyoWPo4EzmfNK7z4NrNejZSLqEwwiRd47tD78jSj6Rj'
 
 BITCOIN_ADDRESSES = {
-     '1AYTkpQDA2nu6vu6JjZvbDgMXa1SjehVYu': 100
-     #'1MmYQSEtF3nmhGZcFLDhrNr7fWn5fehD9Z': 100,
-     #'mn6QvZuSLp8gqQrgXvweS4doiBv5EMM3jT': 100,
-     #'mqFwFYJ6btZRTinw3fTt6no1wXpKT3fURw':100,
-     #'mvVUsS9JQ72AsHNegUVgA1mQFqQPuLfGDR':100
+     #'1AYTkpQDA2nu6vu6JjZvbDgMXa1SjehVYu': 100
+     '17uvo21YYPdFP5qoryTUwXkSjsmeYtkF6E': 100,
+     '1Q2EpkH7SzSGCzYz18j3ctBL898LDpYeUn':100,
+     '1LjoPc3ws8ij5LufnxYr2BuDQH8nBRQJqS':100
 }
 
 #default difficulty, if no diff set for the worker
-DIFFICULTY = 10
+DIFFICULTY = 1
 
 COINBASE_EXTRAS = '/stratum/'
 INSTANCE_ID = 10
 PREVHASH_REFRESH_INTERVAL = 5
-MERKLE_REFRESH_INTERVAL = 50
+MERKLE_REFRESH_INTERVAL = 40
 
 #roll log file or not
 LOG_ROLL = True
 
 #auth user or not
-AUTH_USER = True
+AUTH_USER = False
 
 #mysql settings
 DB_HOST='localhost'

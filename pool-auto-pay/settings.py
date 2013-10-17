@@ -15,11 +15,3 @@ DB_PWD='123456'
 DB_DB='asicme_pool'
 DB_PORT=3306
 
-
-TEST_ADDRESS = [
-	'mn6QvZuSLp8gqQrgXvweS4doiBv5EMM3jT',
-	'mxDRwWJxSCc4sCGaPZKf678LxCyRc45pZt',
-	'mfe8QuJVkXYGjum7pMe32AqnQqHnusJEDF',
-	'ms4F9Sb44ZGVjrC84URggRUivSeHbjDeqm',
-	'mnB43cJB4jceYQMt8ZjWVDpy7yKJbUM69S'
-]

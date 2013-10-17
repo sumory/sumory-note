@@ -43,8 +43,14 @@ except Exception, e:
 rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_PORT, settings.BITCOIN_RPC_USER, settings.BITCOIN_RPC_PASS)
 wallet_account = settings.WALLET_ACCOUNT
 
+try:
+    rpc.settxfee(0)
+except Exception, e:
+    logger.log('error', 'settxfee error %s' % e)
+    exit()
+
 def pay():
-    print '%s paying..' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    print '\n\n\n%s paying..' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     logger.log('debug', 'pay start')
 
     try:
@@ -52,11 +58,13 @@ def pay():
         all_withdraw = db.all_dict(sql)
         logger.log('debug', 'need pay for %d withdraw' % len(all_withdraw))
 
+
+
         if(len(all_withdraw) != 0):
             try:
-                rpc.walletpassphrase('123456', 15)
-            except Exception,e:
-                logger.log('error','walletpassphrase error %s' % e)
+                rpc.walletpassphrase('123456', 6)
+            except Exception, e:
+                logger.log('error', 'walletpassphrase error %s' % e)
 
             for w in all_withdraw:
                 try:
@@ -64,28 +72,31 @@ def pay():
                     
                     withdraw_id = w['id']
                     username = w['user_name']
+                    amount = float(w['amount'])
                     send_amount =  float(w['send_amount'])
-                    address = 'mkaUYgNmoRJD9Y23DyXDCaN2aWaAaqey6j' #w['bitcoin_address']
+                    address = w['bitcoin_address'] #'mkaUYgNmoRJD9Y23DyXDCaN2aWaAaqey6j' #w['bitcoin_address']
                     balance = float(rpc.getbalance(wallet_account))
                     address_valid = rpc.validateaddress(address)
 
-                    logger.log('pay','start %d %s %.8f %s' % (withdraw_id, username, send_amount, address))
+                    logger.log('pay','start %d %s %.8f %.8f %s' % (withdraw_id, username, amount, send_amount, address))
                     
                     if(address_valid != True):
                         logger.log('pay', 'invalid address %s' % address)
                     elif(balance > send_amount):
-                        
                         now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-                        txid = rpc.sendfrom(wallet_account, address, send_amount)
+                        
+                        # 先更新数据库，再打钱，防止极限情况下打完钱没重置数据库
                         sql = 'update pool_withdraw set status = 1,confirm_time="%s" where id = %d' % (now, withdraw_id)
                         db.run(sql)
+                        txid = rpc.sendfrom(wallet_account, address, send_amount)
+                        
                         if txid is not None:                            
                             logger.log('pay','txid %s' % txid)
                             sql = 'update pool_withdraw set status=1, bitcoin_transaction="%s", payment_user="%s", confirm_time="%s" where id = %d' % (txid, 'auto_pay', now, withdraw_id)
                             db.run(sql)
-                            logger.log('pay', 'pay success')
+                            logger.log('pay', 'pay success [%d %s %.8f %.8f %s %s]' % (withdraw_id, username, amount, send_amount, address, txid))
                         else:
-                            logger.log('pay','txid is None')
+                            logger.log('pay','pay fail [%d %s %.8f %.8f %s]' % (withdraw_id, username, amount, send_amount, address))
                     else:
                         logger.log('pay','not enough money to pay %s %.8f' % (username, send_amount))
                     logger.log('pay', '+++++++++++++++++++++++++++++++++end one++++++++++++++++++++++++++++++++++++++++++++++++++')
@@ -101,16 +112,17 @@ def pay():
     except BaseException, e:
         logger.log('error','BaseException %s' % e)
     except:
+        logger.log('error','unknown excepiton')
         pass
     finally:
         logger.log('debug','pay stop')
 
 
 if __name__ == '__main__':
-    forever = False
+    forever = True
     if(forever is True):
         while True:
             pay()
-            time.sleep(20)
+            time.sleep(10)
     else:
         pay()
