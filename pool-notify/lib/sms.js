@@ -1,7 +1,7 @@
 var request = require('request');
 var helper = require('./helper.js');
 
-exports.sendSMS = function(telphone, msg) {
+exports.sendSMS = function(telphone, msg, callback) {
     var content = escape(msg);
     var now = helper.now();
 
@@ -15,11 +15,18 @@ exports.sendSMS = function(telphone, msg) {
         body : ""
     }, function(e, r, body) {
         if (!e) {
-            console.log(now + ' 短信发送成功: ' + telphone + ' '+msg,  body);
+            if(body.indexOf('=1')!=-1){
+                console.log(now + ' 短信发送成功: ' + telphone + ' '+msg,  body);
+                callback && callback(null);
+            }
+            else{
+                console.error(now + ' 短信发送失败: ' + telphone + ' '+msg,  body);
+                callback && callback(true);
+            }
         }
         else {
-            console.error(now + ' 短信发送失败: ' + telphone + ' '+msg);
-            console.error(now + ' 短信发送失败Error: ', e);
+            console.error(now + ' 短信发送失败: ' + telphone + ' '+msg, e);
+            callback && callback(e);
         }
     });
 };

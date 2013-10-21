@@ -14,7 +14,7 @@ module.exports = {
             user : "root",
             password : "123456",
             database : "asicme_com",
-            maxSockets : 10
+            maxSockets : 5
         },
         pool : {// 矿池数据库
             server : "192.168.0.149",
@@ -22,7 +22,7 @@ module.exports = {
             user : "root",
             password : "123456",
             database : "asicme_pool",
-            maxSockets : 10
+            maxSockets : 5
         }
     }
 };

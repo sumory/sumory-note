@@ -2,7 +2,6 @@
 import json
 from lib import bitcoin_rpc
 from lib import logger
-from lib import exceptions
 import settings
 import time
 import random
@@ -13,7 +12,7 @@ rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_POR
 def getblocks():
 
     try:
-        heights = range(1,263535)[::-1]
+        heights = range(263534,264609)[::-1]
         for i in heights:
             hash = rpc.getblockhash(i)
             block = rpc.getblock(hash)

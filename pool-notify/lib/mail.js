@@ -12,33 +12,39 @@ var transport = nodemailer.createTransport("SMTP", {
     }
 });
 
-exports.sendMail = function(sendTo, subject, content) {
+exports.batchSendMail = function(sendTo, subject, content) {
     if (typeof (sendTo) === 'string') {
         sendTo = [ sendTo ];
     }
 
     for ( var i in sendTo) {
         var to = sendTo[i];
-        var mainOptions = {
-            from : "ASICME Mining Pool <" + qq_mail.user + ">",
-            to : to,
-            subject : subject || '',
-            html : content || ''
-
-        };
-
-        transport.sendMail(mainOptions, function(error, responseStatus) {
-            var now = helper.now();
-            if (error) {
-                console.error(now + ' 邮件发送失败: ' + to + ' '+content);
-                console.error(now + ' 邮件发送失败Error: ', error);
-            }
-            else {
-                console.log(now + ' 邮件发送成功: ' + to + ' '+content+" "+ responseStatus.message);
-            }
-        });
+        sendMail(to, subject, content, null);
     }
 
+};
+
+exports.sendMail = function(sendTo, subject, content, callback) {
+    var mainOptions = {
+        from : "ASICME Mining Pool <" + qq_mail.user + ">",
+        to : sendTo,
+        subject : subject || '',
+        html : content || ''
+    };
+
+    transport.sendMail(mainOptions, function(error, responseStatus) {
+        var now = helper.now();
+        if (error) {
+            console.error(now + ' 邮件发送失败: ' + sendTo + ' '+content);
+            console.error(now + ' 邮件发送失败Error: ', error);
+            callback && callback(e);
+        }
+        else {
+            console.log(now + ' 邮件发送成功: ' + sendTo + ' '+content+" "+ responseStatus.message);
+            callback && callback(null);
+        }
+    });
+   
 };
 
 exports.closeTransport = function() {
