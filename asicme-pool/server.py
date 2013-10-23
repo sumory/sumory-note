@@ -81,11 +81,17 @@ class Client(object):
         self.jobs = {}
 
     def get_request(self):
-        line = self.fileobj.readline()
-        if not line:
-            return
-        #logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
-        request = json.loads(line)
+        try:
+            line = self.fileobj.readline()
+            if not line:
+                return
+            #logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
+            #print('---------------------')
+            #print(line)  
+            request = json.loads(line)
+        except Exception, e:
+            request = None
+            print('parse request error: %s %s %s:%s' % (line, self.username, self.address[0], self.address[1]))
         return request
 
     def call(self, method, *args):
@@ -122,6 +128,7 @@ def connection_handler(sock, address):
         while True:
             request = client.get_request()
             if not request:
+                logger.log('fail_client', 'client to remove %s' %  client.username)
                 logger.log('debug', 'client %s:%s disconnected.' % address)
                 break
 
@@ -198,12 +205,14 @@ def connection_handler(sock, address):
 
     except BaseException, e:
         logger.log('fail_client','worker %s:%s except %s' % (client.address[0],client.address[1],e))
+        print('raise BaseException')
         raise
     finally:
         all_clients.remove(client)
-        logger.log('fail_client','worker %s:%s removed' % (client.address[0],client.address[1]))
+        print('remove client')
+        logger.log('fail_client','worker %s %s:%s removed' % (client.username, client.address[0], client.address[1]))
 
 
 if __name__ == '__main__':
-    server = gevent.server.StreamServer(('0.0.0.0', 80), connection_handler)
+    server = gevent.server.StreamServer(('0.0.0.0', 8888), connection_handler)
     server.serve_forever()
