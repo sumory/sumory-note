@@ -34,6 +34,9 @@ if(settings.AUTH_USER):
 
 all_clients = set()
 
+def now():
+    return time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+
 
 '''
         job_id = self.job_id
@@ -49,12 +52,14 @@ all_clients = set()
 rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_PORT, settings.BITCOIN_RPC_USER, settings.BITCOIN_RPC_PASS)
 
 def broadcast(broadcast_args):
-    print '%s broadcasting' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) 
+    print('%s broadcast for %d clients' % (now(), len(all_clients)))
     for client in all_clients:
         try:
             client.call('mining.notify', *broadcast_args)
         except:
+            print('%s:%s call error' % client.address)
             pass
+    print('%s broadcast finished' % now())
 
 def on_template_callback(*args, **kwargs):
     broadcast_args = registry.get_last_broadcast_args()
@@ -84,14 +89,15 @@ class Client(object):
         try:
             line = self.fileobj.readline()
             if not line:
-                return
+                return None
             #logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
-            #print('---------------------')
-            #print(line)  
             request = json.loads(line)
         except Exception, e:
             request = None
-            print('parse request error: %s %s %s:%s' % (line, self.username, self.address[0], self.address[1]))
+            if locals().has_key('line'):
+                print('parse request error: %s %s %s:%s' % (line, self.username, self.address[0], self.address[1]))
+            else:
+                print('parse request error: %s %s:%s' % (self.username, self.address))
         return request
 
     def call(self, method, *args):
@@ -129,7 +135,6 @@ def connection_handler(sock, address):
             request = client.get_request()
             if not request:
                 logger.log('fail_client', 'client to remove %s' %  client.username)
-                logger.log('debug', 'client %s:%s disconnected.' % address)
                 break
 
             if request['method'] == 'mining.subscribe':
@@ -144,7 +149,7 @@ def connection_handler(sock, address):
                 worker_name = request['params'][0]
                 
                 if(settings.AUTH_USER):
-                    print('auth worker: %s' % worker_name)
+                    print('auth worker: %s %s:%s' % (worker_name,address[0],address[1]))
                     try:
                         sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
                         logger.log('authorize', 'sql: %s' % (sql))
@@ -158,6 +163,7 @@ def connection_handler(sock, address):
                         logger.log('authorize', 'no worker: %s %s' % (address, worker_name))
                         break
                     else:
+                        print('auth worker ok: %s' % worker_name)
                         client.username = worker_name
                         if('difficulty' in worker):
                             diff = worker['difficulty']
@@ -209,7 +215,9 @@ def connection_handler(sock, address):
         raise
     finally:
         all_clients.remove(client)
-        print('remove client')
+        print('remove client %s:%s' % client.address)
+        client.sock.close()
+        print('client closed %s:%s' % client.address)
         logger.log('fail_client','worker %s %s:%s removed' % (client.username, client.address[0], client.address[1]))
 
 

@@ -18,17 +18,17 @@ DIFFICULTY = 1
 COINBASE_EXTRAS = '/stratum/'
 INSTANCE_ID = 10
 PREVHASH_REFRESH_INTERVAL = 5
-MERKLE_REFRESH_INTERVAL = 40
+MERKLE_REFRESH_INTERVAL = 5
 
 #roll log file or not
 LOG_ROLL = True
 
 #auth user or not
-AUTH_USER = False
+AUTH_USER = True
 
 #mysql settings
 DB_HOST='localhost'
 DB_USER='root'
 DB_PWD='123456'
-DB_DB='asicme_test'
+DB_DB='asicme_pool'
 DB_PORT=3306
