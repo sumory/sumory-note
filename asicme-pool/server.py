@@ -52,14 +52,20 @@ def now():
 rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_PORT, settings.BITCOIN_RPC_USER, settings.BITCOIN_RPC_PASS)
 
 def broadcast(broadcast_args):
-    print('%s broadcast for %d clients' % (now(), len(all_clients)))
-    for client in all_clients:
-        try:
-            client.call('mining.notify', *broadcast_args)
-        except:
-            print('%s:%s call error' % client.address)
-            pass
-    print('%s broadcast finished' % now())
+    try:
+        logger.log('track', '%s broadcast for %d clients' % (now(), len(all_clients)))
+        print('%s broadcast for %d clients' % (now(), len(all_clients)))
+        for client in all_clients:
+            try:
+                client.call('mining.notify', *broadcast_args)
+            except:
+                print('%s:%s call error' % client.address)
+                pass
+        logger.log('track', '%s broadcast finished' % now())
+        print('%s broadcast finished' % now())
+    except:
+        print('broadcast errooooooooooooooor......')
+        pass
 
 def on_template_callback(*args, **kwargs):
     broadcast_args = registry.get_last_broadcast_args()
@@ -86,18 +92,11 @@ class Client(object):
         self.jobs = {}
 
     def get_request(self):
-        try:
-            line = self.fileobj.readline()
-            if not line:
-                return None
-            #logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
-            request = json.loads(line)
-        except Exception, e:
-            request = None
-            if locals().has_key('line'):
-                print('parse request error: %s %s %s:%s' % (line, self.username, self.address[0], self.address[1]))
-            else:
-                print('parse request error: %s %s:%s' % (self.username, self.address))
+        line = self.fileobj.readline()
+        if not line:
+            return
+        logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
+        request = json.loads(line)
         return request
 
     def call(self, method, *args):
@@ -107,10 +106,8 @@ class Client(object):
             'params': args,
         }
         s = json.dumps(obj) + '\n'
-        #logger.log('client', 'call %s:%s %s' % (self.address[0], self.address[1], s.strip()))
+        logger.log('client', 'call %s:%s %s' % (self.address[0], self.address[1], s.strip()))
         self.fileobj.write(s)
-        self.fileobj.flush()
-
     def response(self, request_id, result):
         obj = {
             'id': request_id,
@@ -118,23 +115,22 @@ class Client(object):
             'error': None,
         }
         s = json.dumps(obj) + '\n'
-        #logger.log('client', 'resp %s:%s %s' % (self.address[0], self.address[1], s.strip()))
+        logger.log('client', 'resp %s:%s %s' % (self.address[0], self.address[1], s.strip()))
         self.fileobj.write(s)
         self.fileobj.flush()
 
 
 # this handler will be run for each incoming connection in a dedicated greenlet
 def connection_handler(sock, address):
-    logger.log('debug', 'New connection from %s:%s' % address)
-
-    client = Client(sock, address)
+    logger.log('track', 'New connection from %s:%s' % address)
 
     try:
+        client = Client(sock, address)
         all_clients.add(client)
         while True:
             request = client.get_request()
             if not request:
-                logger.log('fail_client', 'client to remove %s' %  client.username)
+                logger.log('track', 'no request %s %s:%s' %  (client.username, address[0], address[1]))
                 break
 
             if request['method'] == 'mining.subscribe':
@@ -152,7 +148,7 @@ def connection_handler(sock, address):
                     print('auth worker: %s %s:%s' % (worker_name,address[0],address[1]))
                     try:
                         sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
-                        logger.log('authorize', 'sql: %s' % (sql))
+                        logger.log('authorize', 'query worker: %s' % (worker_name))
                         worker=db.one_dict(sql)
                         logger.log('authorize', 'query result: %s' % worker)
                     except Exception, e:
@@ -210,17 +206,16 @@ def connection_handler(sock, address):
 
 
     except BaseException, e:
-        logger.log('fail_client','worker %s:%s except %s' % (client.address[0],client.address[1],e))
-        print('raise BaseException')
+        logger.log('track', 'worker %s:%s except %s' % (address[0], address[1],e))
+        print('--raise BaseException %s' % e)
         raise
     finally:
         all_clients.remove(client)
-        print('remove client %s:%s' % client.address)
-        client.sock.close()
-        print('client closed %s:%s' % client.address)
-        logger.log('fail_client','worker %s %s:%s removed' % (client.username, client.address[0], client.address[1]))
-
+        print('--remove client %s:%s' % address)
+        #sock.close()
+        logger.log('track', 'Dead connection from %s:%s' % address)
 
 if __name__ == '__main__':
     server = gevent.server.StreamServer(('0.0.0.0', 8888), connection_handler)
     server.serve_forever()
+
