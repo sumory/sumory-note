@@ -63,9 +63,9 @@ def broadcast(broadcast_args):
                 pass
         logger.log('track', '%s broadcast finished' % now())
         print('%s broadcast finished' % now())
-    except:
-        print('broadcast errooooooooooooooor......')
-        pass
+    except Exception, e:
+        print('broadcast errooooooooooooooor...... %s' % e)
+        raise e
 
 def on_template_callback(*args, **kwargs):
     broadcast_args = registry.get_last_broadcast_args()
@@ -93,6 +93,7 @@ class Client(object):
 
     def get_request(self):
         line = self.fileobj.readline()
+        print('line %s' % line)
         if not line:
             return
         logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
@@ -108,6 +109,8 @@ class Client(object):
         s = json.dumps(obj) + '\n'
         logger.log('client', 'call %s:%s %s' % (self.address[0], self.address[1], s.strip()))
         self.fileobj.write(s)
+        self.fileobj.flush()
+    
     def response(self, request_id, result):
         obj = {
             'id': request_id,
