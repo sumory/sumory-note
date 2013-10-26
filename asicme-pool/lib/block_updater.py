@@ -21,7 +21,9 @@ class BlockUpdater(object):
                         
     def schedule(self):
         while True:
+            logger.log('track','schedule start')
             self.run()
+            logger.log('track','schedule stop')
             gevent.sleep(settings.PREVHASH_REFRESH_INTERVAL)
                      
     def run(self):
@@ -49,6 +51,7 @@ class BlockUpdater(object):
                 self.registry.update_block()
 
         except Exception, e:
-            logger.log('error', "UpdateWatchdog.run failed")
+            logger.log('error', "UpdateWatchdog.run failed %s" % e)
+            pass
 
     

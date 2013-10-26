@@ -53,19 +53,17 @@ rpc = bitcoin_rpc.BitcoinRPC(settings.BITCOIN_RPC_HOST, settings.BITCOIN_RPC_POR
 
 def broadcast(broadcast_args):
     try:
-        logger.log('track', '%s broadcast for %d clients' % (now(), len(all_clients)))
+        logger.log('track', 'broadcast for %d clients' % (len(all_clients)))
         print('%s broadcast for %d clients' % (now(), len(all_clients)))
         for client in all_clients:
             try:
                 client.call('mining.notify', *broadcast_args)
-            except:
-                print('%s:%s call error' % client.address)
-                pass
-        logger.log('track', '%s broadcast finished' % now())
+            except Exception,e:
+                logger.log('track', '%s:%s call error %s' % (client.address[0], client.address[1], e))
+        logger.log('track', 'broadcast finished')
         print('%s broadcast finished' % now())
     except Exception, e:
-        print('broadcast errooooooooooooooor...... %s' % e)
-        raise e
+        logger.log('track', 'broadcast errooooooooooooooor...... %s' % e)
 
 def on_template_callback(*args, **kwargs):
     broadcast_args = registry.get_last_broadcast_args()
@@ -93,7 +91,7 @@ class Client(object):
 
     def get_request(self):
         line = self.fileobj.readline()
-        print('line %s' % line)
+        #print('line %s' % line)
         if not line:
             return
         logger.log('client', 'recv %s:%s %s' % (self.address[0], self.address[1], line.strip()))
