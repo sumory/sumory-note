@@ -213,7 +213,7 @@ def connection_handler(sock, address):
     finally:
         all_clients.remove(client)
         print('--remove client %s:%s' % address)
-        #sock.close()
+        sock.close()
         logger.log('track', 'Dead connection from %s:%s' % address)
 
 if __name__ == '__main__':
