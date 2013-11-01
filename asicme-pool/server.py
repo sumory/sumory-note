@@ -148,6 +148,7 @@ def connection_handler(sock, address):
                 if(settings.AUTH_USER):
                     print('auth worker: %s %s:%s' % (worker_name,address[0],address[1]))
                     try:
+                        logger.log('authorize', 'auth worker: %s %s:%s' % (worker_name, address[0], address[1]))
                         sql='SELECT * FROM pool_worker WHERE worker_name="%s"' % addslashes(worker_name)
                         logger.log('authorize', 'query worker: %s' % (worker_name))
                         worker=db.one_dict(sql)
@@ -196,12 +197,17 @@ def connection_handler(sock, address):
                     submit_result = registry.submit_share(job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce, client.difficulty)
                     result = True
                 except exceptions.SubmitException, e:
+                    #print('--submit exception %s' % worker_name)
                     logger.log('submit_exception','worker %s except %s' % (worker_name, e))
                     result = True
-                    # break
-                    pass
+                    if(worker_name.find('yangdashan.')==0 or worker_name.find('asicme_miner.')==0):
+                        print('++ignore %s' % worker_name)
+                        pass
+                    else:
+                        print('++break % s' % worker_name)
+                        break
                 except:
-                    pass
+                    break
 
                 client.response(request['id'], result)
 
