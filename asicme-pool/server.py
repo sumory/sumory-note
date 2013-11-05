@@ -169,10 +169,18 @@ def connection_handler(sock, address):
                         else:
                             diff = settings.DIFFICULTY
                             logger.log('authorize', 'set default-diff: %s' % diff)
+                        if('payment_type' in worker):
+                            payment_type = worker['payment_type']
+                            logger.log('authorize', 'set payment_type: %s' % payment_type)
+                        else:
+                            payment_type = 'PPS'
+                            logger.log('authorize', 'set default-payment_type: %s' % payment_type)
+                        client.payment_type = payment_type
                         client.difficulty = diff
                         client.call('mining.set_difficulty', client.difficulty)
                         client.response(request['id'], True)
                 else:
+                    client.payment_type = 'PPS'
                     client.username = worker_name
                     client.difficulty = settings.DIFFICULTY
                     client.response(request['id'], True)
@@ -194,7 +202,7 @@ def connection_handler(sock, address):
 
                 result = False
                 try:
-                    submit_result = registry.submit_share(job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce, client.difficulty)
+                    submit_result = registry.submit_share(job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce, client.difficulty, client.payment_type)
                     result = True
                 except exceptions.SubmitException, e:
                     #print('--submit exception %s' % worker_name)

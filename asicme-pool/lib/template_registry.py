@@ -146,7 +146,7 @@ class TemplateRegistry(object):
         return j
         
     def submit_share(self, job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce,
-                     difficulty):
+                     difficulty, payment_type):
         '''Check parameters and finalize block template. If it leads
            to valid block candidate, asynchronously submits the block
            back to the bitcoin network.
@@ -216,8 +216,11 @@ class TemplateRegistry(object):
             logger.log('bad_client', 'Share is above target')
             raise SubmitException("Share is above target")
 
-
-        logger.log('share', worker_name, 'HASH %064x' % hash_int, 'TARGET %064x' % job.target, 'DIFF %d' % difficulty)
+        if payment_type == 'PPS':    
+            logger.log('share', worker_name, 'HASH %064x' % hash_int, 'TARGET %064x' % job.target, 'DIFF %d' % difficulty)
+            logger.log('pplns', worker_name, 'HASH %064x' % hash_int, 'DIFF %d' % difficulty, 'PAY 0')
+        if payment_type == 'PPLNS':
+            logger.log('pplns', worker_name, 'HASH %064x' % hash_int, 'DIFF %d' % difficulty, 'PAY 1')
 
         # 5. Compare hash with target of the network        
         if hash_int <= job.target:

@@ -7,7 +7,7 @@ BITCOIN_RPC_PASS = 'BQyoWPo4EzmfNK7z4NrNejZSLqEwwiRd47tD78jSj6Rj'
 
 BITCOIN_ADDRESSES = {
      #'1AYTkpQDA2nu6vu6JjZvbDgMXa1SjehVYu': 100
-     '17uvo21YYPdFP5qoryTUwXkSjsmeYtkF6E': 100,
+     '1F6KXWyoiXjLbpoBxkTQEJXAs1R6brEurG':100,
      '1Q2EpkH7SzSGCzYz18j3ctBL898LDpYeUn':100,
      '1LjoPc3ws8ij5LufnxYr2BuDQH8nBRQJqS':100
 }
