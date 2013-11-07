@@ -80,3 +80,11 @@ class BitcoinRPC(object):
             return None
         else:
             return result['result']
+
+    def getblock(self, blockhash):
+        resp = self._call('getblock', [blockhash])
+        return json.loads(resp)['result']
+
+    def gettxout(self, txid, n):
+        resp = self._call('gettxout', [txid, n])
+        return json.loads(resp)['result']

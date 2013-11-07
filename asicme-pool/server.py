@@ -2,6 +2,7 @@ import json
 import gevent
 import gevent.core
 import gevent.server
+from gevent import socket
 from lib import util
 from lib import merkletree
 from lib import coinbaser
