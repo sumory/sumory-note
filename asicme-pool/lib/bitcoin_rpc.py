@@ -4,8 +4,8 @@
 
 import json
 import base64
-import logger
 import geventhttpclient
+import logger
 
 class BitcoinRPC(object):
     
@@ -29,9 +29,33 @@ class BitcoinRPC(object):
                 'method': method,
                 'params': params,
                 'id': '1',
-        }))
+            }))
 
-    def _pay_call_raw(self, data):
+    def submitblock(self, block_hex):
+        resp = self._call('submitblock', [block_hex])
+        if json.loads(resp)['result'] == None:
+            return True
+        else:
+            return False
+
+    def getblocktemplate(self):
+        resp = self._call('getblocktemplate', [])
+        return json.loads(resp)['result']
+
+    def prevhash(self):
+        resp = self._call('getwork', [])
+        try:
+            return json.loads(resp)['result']['data'][8:72]
+        except Exception as e:
+            logger.log('error', "Cannot decode prevhash %s" % str(e))
+            raise
+                                                  
+    def validateaddress(self, address):
+        resp = self._call('validateaddress', [address])
+        return json.loads(resp)['result']
+
+		
+	def _pay_call_raw(self, data):
         logger.log('pay', 'req:', data)
         res = self.client.post('/', body=data, headers=self.headers).read()
         logger.log('pay', 'res:', res)
@@ -46,7 +70,7 @@ class BitcoinRPC(object):
         }))
 
                                            
-    def validateaddress(self, address):
+    def validateaddress2(self, address):
         resp = self._pay_call('validateaddress', [address])
         return json.loads(resp)['result']['isvalid']
 
@@ -88,3 +112,4 @@ class BitcoinRPC(object):
     def gettxout(self, txid, n):
         resp = self._call('gettxout', [txid, n])
         return json.loads(resp)['result']
+
