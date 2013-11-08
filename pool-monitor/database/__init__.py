@@ -15,9 +15,9 @@ def mysql_database_conf():
 	return locals()
 	
 def database_pooling_conf():
-	mincached=10
-	maxcached=150
-	maxconnections=150
+	mincached=2
+	maxcached=10
+	maxconnections=10
 	# maxshared=0
 	# blocking=False
 	# maxusage=None

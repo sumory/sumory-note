@@ -1,3 +1,4 @@
+from __future__ import division
 import json
 import gevent
 import gevent.core
@@ -205,6 +206,39 @@ def connection_handler(sock, address):
                 try:
                     submit_result = registry.submit_share(job_id, worker_name, extranonce1_bin, extranonce2, ntime, nonce, client.difficulty, client.payment_type)
                     result = True
+
+                    if submit_result[0] is True:
+                        try:
+                            happy_worker_name = submit_result[1]
+                            happy_block_hash = submit_result[2]
+
+                            rpc_block = rpc.getblock(happy_block_hash)
+                            block_height = int(rpc_block['height'])
+                            confirmations = int(rpc_block['confirmations'])
+                            coinbase_txid = rpc_block['tx'][0]
+                            coinbase = rpc.gettxout(coinbase_txid,0)
+                            coinbase_value = float(coinbase['value'])
+
+                            sql1 = 'insert into pool_block(height, hash, confirmations,time,txid,value,paid,status,worker_name) values(%d,%s,%d,%s,%s,%.8f,%d,%d,%s)' % (block_height, happy_block_hash, confirmations, now(), coinbase_txid, coinbase_value, 25, 1, happy_worker_name))
+                            
+                            logger.log('store', 'sql1: %s' % sql1)                            
+                            insert_block_id = db.run(sql1)
+
+                            open_shifts = db.all_dict('select * from pool_shift where status = 1')
+                            if len(open_shifts) != 10:
+                                logger.log('store','have no 10 open shifts')
+                            else:
+                                open_shifts_total_show_count = 0
+                                for shift in open_shifts:
+                                    open_shifts_total_show_count += shift['show_count']
+                                for s in open_shifts:
+                                    benefit = float(s['show_count']/open_shifts_total_show_count*25)
+                                    sql2 = 'insert into pool_shift_block(shift_id,block_id,benefit,status) value(%d,%d,%.8f,%d)' % (s['id'], insert_block_id, benefit, 1)
+                                    logger.log('store', 'sql2: %s' % sql2)
+                                    db.run(sql2)
+                                    
+                        except Exception, e:
+                            logger.log('store', 'exception: %s' % e)
                 except exceptions.SubmitException, e:
                     #print('--submit exception %s' % worker_name)
                     logger.log('submit_exception','worker %s except %s' % (worker_name, e))

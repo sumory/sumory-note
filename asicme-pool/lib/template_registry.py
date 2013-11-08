@@ -238,6 +238,6 @@ class TemplateRegistry(object):
             serialized = binascii.hexlify(job.serialize())
             on_submit = self.bitcoin_rpc.submitblock(serialized)
             logger.log('submitblock', serialized)
-            return (header_hex, block_hash_hex, on_submit)
+            return (True, worker_name, block_hash_hex)
         
-        return (header_hex, block_hash_hex, None)
+        return (False, worker_name, block_hash_hex)
