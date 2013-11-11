@@ -21,6 +21,9 @@ INSTANCE_ID = 10
 PREVHASH_REFRESH_INTERVAL = 5
 MERKLE_REFRESH_INTERVAL = 50
 
+#logs dir
+LOG_DIR = '/data/pool/logs'
+
 #roll log file or not
 LOG_ROLL = True
 

@@ -219,7 +219,7 @@ def connection_handler(sock, address):
                             coinbase = rpc.gettxout(coinbase_txid,0)
                             coinbase_value = float(coinbase['value'])
 
-                            sql1 = 'insert into pool_block(height, hash, confirmations,time,txid,value,paid,status,worker_name) values(%d,%s,%d,%s,%s,%.8f,%d,%d,%s)' % (block_height, happy_block_hash, confirmations, now(), coinbase_txid, coinbase_value, 25, 1, happy_worker_name))
+                            sql1 = 'insert into pool_block(height, hash, confirmations,time,txid,value,paid,status,worker_name) values(%d,"%s",%d,"%s","%s",%.8f,%d,%d,"%s")' % (block_height, happy_block_hash, confirmations, now(), coinbase_txid, coinbase_value, 25, 1, happy_worker_name)
                             
                             logger.log('store', 'sql1: %s' % sql1)                            
                             insert_block_id = db.run(sql1)
@@ -233,7 +233,10 @@ def connection_handler(sock, address):
                                     open_shifts_total_show_count += shift['show_count']
                                 for s in open_shifts:
                                     benefit = float(s['show_count']/open_shifts_total_show_count*25)
-                                    sql2 = 'insert into pool_shift_block(shift_id,block_id,benefit,status) value(%d,%d,%.8f,%d)' % (s['id'], insert_block_id, benefit, 1)
+                                    if benefit >= 25:
+                                        benefit = 0.00000001
+                                        logger.log('store', 'something maybe wrong %d %d %d' %(s['shift_id'], s['show_count'], open_shifts_total_show_count))
+                                    sql2 = 'insert into pool_shift_block(shift_id,block_id,benefit,status) value(%d,%d,%.8f,%d)' % (s['shift_id'], insert_block_id, benefit, 1)
                                     logger.log('store', 'sql2: %s' % sql2)
                                     db.run(sql2)
                                     

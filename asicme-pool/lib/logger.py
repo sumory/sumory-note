@@ -5,6 +5,7 @@ import time
 import settings
 
 
+LOG_DIR = settings.LOG_DIR
 scope_to_f = {}
 
 def log(scope, *args):
@@ -26,7 +27,11 @@ def log(scope, *args):
                 except Exception, e:
                     print('close log error %s' % e)
 
+
+
+    
     if scope not in scope_to_f:
-        scope_to_f[scope] = open('logs/%s.log' % scope, 'a+')
+        log_file = '%s/%s.log' % (LOG_DIR, scope)
+        scope_to_f[scope] = open(log_file, 'a+')
     print(str(datetime.datetime.now()), *args, file=scope_to_f[scope])
     scope_to_f[scope].flush()
