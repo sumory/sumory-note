@@ -1,4 +1,5 @@
 from __future__ import division
+import traceback
 import json
 import gevent
 import gevent.core
@@ -216,15 +217,23 @@ def connection_handler(sock, address):
                             block_height = int(rpc_block['height'])
                             confirmations = int(rpc_block['confirmations'])
                             coinbase_txid = rpc_block['tx'][0]
-                            coinbase = rpc.gettxout(coinbase_txid,0)
-                            coinbase_value = float(coinbase['value'])
+                            
+                            coinbase_value = 0
+                            try:
+                                coinbase = rpc.gettxout(coinbase_txid,0)
+                                coinbase_value = float(coinbase['value'])
+                            except Exception, e:
+                                logger.log('store', 'coinbase exception: %s' % traceback.format_exc())
+                                coinbase_value = 0
+                                
 
-                            sql1 = 'insert into pool_block(height, hash, confirmations,time,txid,value,paid,status,worker_name) values(%d,"%s",%d,"%s","%s",%.8f,%d,%d,"%s")' % (block_height, happy_block_hash, confirmations, now(), coinbase_txid, coinbase_value, 25, 1, happy_worker_name)
+                            sql1 = 'insert into pool_block(height, hash, confirmations,time,txid,value,paid,status,worker_name) values(%d,"%s",%d,"%s","%s",%.8f,%.8f,%d,"%s")' % (block_height, happy_block_hash, confirmations, now(), coinbase_txid, coinbase_value, 25*0.97, 0, happy_worker_name)
                             
                             logger.log('store', 'sql1: %s' % sql1)                            
                             insert_block_id = db.run(sql1)
 
-                            open_shifts = db.all_dict('select * from pool_shift where status = 1')
+                            '''
+                            open_shifts = db.all_dict('select * from pool_shift where status = 1 and date = "%s"' %(time.strftime('%Y%m%d',time.localtime(time.time()))))
                             if len(open_shifts) != 10:
                                 logger.log('store','have no 10 open shifts')
                             else:
@@ -239,19 +248,17 @@ def connection_handler(sock, address):
                                     sql2 = 'insert into pool_shift_block(shift_id,block_id,benefit,status) value(%d,%d,%.8f,%d)' % (s['shift_id'], insert_block_id, benefit, 1)
                                     logger.log('store', 'sql2: %s' % sql2)
                                     db.run(sql2)
-                                    
+                            '''     
                         except Exception, e:
-                            logger.log('store', 'exception: %s' % e)
+                            logger.log('store', 'unknown exception: %s' % traceback.format_exc())
                 except exceptions.SubmitException, e:
-                    #print('--submit exception %s' % worker_name)
                     logger.log('submit_exception','worker %s except %s' % (worker_name, e))
                     result = True
                     if(worker_name.find('yangdashan.')==0 or worker_name.find('asicme_miner.')==0):
                         print('++ignore %s' % worker_name)
-                        pass
                     else:
                         print('++break % s' % worker_name)
-                        break
+                        #break
                 except:
                     break
 

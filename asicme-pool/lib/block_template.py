@@ -95,7 +95,7 @@ class BlockTemplate(halfnode.CBlock):
         version = binascii.hexlify(struct.pack(">i", self.nVersion))
         nbits = binascii.hexlify(struct.pack(">I", self.nBits))
         ntime = binascii.hexlify(struct.pack(">I", self.curtime))
-        clean_jobs = False 
+        clean_jobs = False
         
         return (job_id, prevhash, coinb1, coinb2, merkle_branch, version, nbits, ntime, clean_jobs)
 
